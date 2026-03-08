@@ -1,0 +1,42 @@
+"""
+Mapeamento RIA-01 a RIA-35 para endpoints do ia-service.
+Todos os requisitos de IA rodam em Python, integrados ao Node.js via proxy.
+"""
+
+RIA_ENDPOINTS = {
+    "RIA-01": ("/ia/identificacao-pelagem", "identificacao"),
+    "RIA-02": ("/ia/estimativa-peso", "peso_visual"),
+    "RIA-03": ("/ia/deteccao-monta", "reproducao"),
+    "RIA-04": ("/ia/sinais-enfermidade", "saude"),
+    "RIA-05": ("/ia/estimar-ecc-imagem", "ecc"),
+    "RIA-06": ("/ia/alertas-sensores", "sensores"),
+    "RIA-07": ("/ia/risco-parto-distocico", "reproducao"),
+    "RIA-08": ("/ia/diagnostico-sugestao", "diagnostico"),
+    "RIA-09": ("/ia/famacha-ocular", "saude"),
+    "RIA-10": ("/ia/detectar-surto", "alertas"),
+    "RIA-11": ("/ia/probabilidade-prenhez", "reproducao"),
+    "RIA-12": ("/ia/acasalamento-otimo", "reproducao"),
+    "RIA-13": ("/ia/predicao-iep", "reproducao"),
+    "RIA-14": ("/ia/candidatas-descarte", "reproducao"),
+    "RIA-15": ("/ia/ndvi-biomassa", "pastagens"),
+    "RIA-16": ("/ia/capacidade-suporte", "pastagens"),
+    "RIA-17": ("/ia/suplementacao-adaptativa", "nutricao"),
+    "RIA-18": ("/ia/degradacao-pastagem", "pastagens"),
+    "RIA-19": ("/ia/predicao-abate", "comercial"),
+    "RIA-20": ("/ia/tipificacao-carcaca", "comercial"),
+    "RIA-21": ("/ia/alerta-janela-abate", "comercial"),
+    "RIA-22": ("/ia/potencial-desempenho", "selecao"),
+    "RIA-23": ("/ia/manutencao-preditiva", "patrimonio"),
+    "RIA-24": ("/ia/substituicao-equipamento", "patrimonio"),
+    "RIA-25": ("/ia/inspecao-benfeitorias", "patrimonio"),
+    "RIA-26": ("/ia/agenda-tarefas", "tarefas"),
+    "RIA-27": ("/ia/registro-voz", "voz"),
+    "RIA-28": ("/ia/ocr-documentos", "ocr"),
+    "RIA-29": ("/ia/tarefa-urgente", "tarefas"),
+    "RIA-30": ("/ia/redistribuir-tarefas", "tarefas"),
+    "RIA-31": ("/ia/copiloto", "copiloto"),
+    "RIA-32": ("/ia/benchmark", "benchmark"),
+    "RIA-33": ("/ia/projecao-fluxo-caixa", "financeiro"),
+    "RIA-34": ("/ia/proximos-passos", "copiloto"),
+    "RIA-35": ("/ia/resumo-executivo", "copiloto"),
+}

@@ -1,0 +1,21 @@
+{
+  "name": "pecuaria-web",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "setup": "cd backend && npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:ia": "cd ia-service && python run.py",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ia\"",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  GERENTE
+  VETERINARIO
+  VAQUEIRO
+  AUXILIAR
+  AUDITOR
+}
+
+enum CategoriaAnimal {
+  BEZERRO
+  BEZERRA
+  NOVILHO
+  NOVILHA
+  VACA
+  TOURO
+  BOI
+}
+
+enum Sexo {
+  M
+  F
+  M_CASTRADO
+}
+
+enum TipoOrigem {
+  NASCIMENTO
+  COMPRA
+  TRANSFERENCIA
+}
+
+model Config {
+  id        String   @id @default(uuid())
+  chave     String   @unique
+  valor     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Raca {
+  id        String   @id @default(uuid())
+  nome      String   @unique
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TipoBaixa {
+  VENDA
+  ABATE
+  MORTE
+  FURTO
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(VAQUEIRO)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entity     String
+  entityId   String?
+  changes    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+}
+
+model Propriedade {
+  id        String   @id @default(uuid())
+  nome      String
+  cnpj      String?
+  areaTotal Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  animais       Animal[]
+  lotes         Lote[]
+  piquetes      Piquete[]
+  estacoesMonta EstacaoMonta[]
+  medicamentos  Medicamento[]
+  receitas      Receita[]
+  despesas      Despesa[]
+  bensPatrimoniais BemPatrimonial[]
+  funcionarios  Funcionario[]
+  tarefas       Tarefa[]
+  fornecedores  Fornecedor[]
+}
+
+model Fornecedor {
+  id             String   @id @default(uuid())
+  propriedadeId  String
+  propriedade    Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  nome           String
+  tipoPessoa     String   // FISICA | JURIDICA
+  cnpj           String?
+  cpf            String?
+  telCelular     String?
+  email          String?
+  endereco       String?
+  numero         String?
+  complemento    String?
+  bairro         String?
+  cep            String?
+  municipio      String?
+  banco          String?
+  agencia        String?
+  contaBancaria  String?
+  observacao     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([propriedadeId])
+}
+
+model Animal {
+  id            String         @id @default(uuid())
+  propriedadeId String
+  propriedade   Propriedade    @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  brinco        String
+  brincoEid     String?
+  apelido       String?
+  especie       String         @default("bovino")
+  raca          String?
+  grauSangue    String?
+  sexo          Sexo
+  categoria     CategoriaAnimal
+  dataNascimento DateTime?
+  pesoAoNascer  Float?
+  pelagem       String?
+  origem        String?
+  tipoOrigem    TipoOrigem?
+  dataEntrada   DateTime?
+  paiId         String?
+  pai           Animal?        @relation("PaiFilhos", fields: [paiId], references: [id])
+  criasPai      Animal[]       @relation("PaiFilhos")
+  maeId         String?
+  mae           Animal?        @relation("Genealogia", fields: [maeId], references: [id])
+  crias         Animal[]       @relation("Genealogia")
+  nomePai       String?
+  nomeMae       String?
+  statusRegistro  String?
+  numeroRegistro  String?
+  propriedadeOrigem String?
+  valorAquisicao  Float?
+  numeroSISBOV    String?
+  observacoes     String?
+  ativo           Boolean  @default(true)
+  foto            String?
+  piqueteId       String?
+  piquete         Piquete? @relation(fields: [piqueteId], references: [id])
+  dataBaixa       DateTime?
+  motivoBaixa   TipoBaixa?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  loteId        String?
+  lote          Lote?          @relation(fields: [loteId], references: [id])
+
+  pesagens      Pesagem[]
+  partos        Parto[]        @relation("PartoMae")
+  partoComoCria Parto?         @relation("PartoCria")
+  vacinacoes       Vacinacao[]
+  movimentacoes    Movimentacao[]
+  diagnosticos     DiagnosticoGestacao[]
+
+  @@unique([propriedadeId, brinco])
+  @@index([propriedadeId])
+  @@index([loteId])
+  @@index([paiId])
+  @@index([maeId])
+  @@index([brincoEid])
+  @@index([piqueteId])
+  @@index([ativo])
+}
+
+model Lote {
+  id               String   @id @default(uuid())
+  propriedadeId    String
+  propriedade      Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  nome             String
+  categoria        CategoriaAnimal
+  faseProdutiva    String?   // CRIA, RECRIA, ENGORDA, MATRIZES, REPRODUTORES
+  quantidade       Int      @default(0)
+  piqueteId        String?
+  piquete          Piquete? @relation(fields: [piqueteId], references: [id])
+  metaGMD          Float?
+  metaPesoAbate    Float?
+  dataFormacao     DateTime?
+  responsavel      String?
+  ativo            Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  animais          Animal[]
+  movimentacoes    Movimentacao[]
+}
+
+model Piquete {
+  id               String   @id @default(uuid())
+  propriedadeId    String
+  propriedade      Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  nome             String
+  areaHa           Float
+  especieForrageira String?
+  capacidadeSuporte Float?
+  estadoConservacao String?  // BOM, REGULAR, DEGRADADO, EM_REFORMA
+  bebedouro        Boolean  @default(false)
+  cochoParaSal     Boolean  @default(false)
+  adubado          Boolean  @default(false)
+  irrigado         Boolean  @default(false)
+  sistemaPastejo   String?  // CONTINUO, ROTACIONADO
+  poligono         Json?    // GeoJSON Polygon: { type: "Polygon", coordinates: [[[lng,lat],...]] }
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  lotes            Lote[]
+  animais          Animal[]
+}
+
+model EstacaoMonta {
+  id            String   @id @default(uuid())
+  propriedadeId String
+  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  nome          String
+  dataInicio    DateTime
+  dataFim       DateTime
+  loteFemeasId  String?
+  piqueteId     String?
+  razaoTouroVaca Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  diagnosticos  DiagnosticoGestacao[]
+}
+
+model DiagnosticoGestacao {
+  id               String       @id @default(uuid())
+  estacaoMontaId   String
+  estacaoMonta     EstacaoMonta @relation(fields: [estacaoMontaId], references: [id], onDelete: Cascade)
+  animalId         String
+  animal           Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  data             DateTime
+  resultado        String
+  metodo           String?
+  idadeGestacional Int?
+  dataPrevistaParto DateTime?
+  responsavel      String?
+  createdAt        DateTime     @default(now())
+
+  @@unique([estacaoMontaId, animalId])
+  @@index([estacaoMontaId])
+}
+
+model Parto {
+  id               String   @id @default(uuid())
+  maeId            String
+  mae              Animal   @relation("PartoMae", fields: [maeId], references: [id], onDelete: Cascade)
+  criaId           String?  @unique
+  cria             Animal?  @relation("PartoCria", fields: [criaId], references: [id])
+  data             DateTime
+  hora             String?
+  tipo             String?
+  sexoCria         Sexo?
+  pesoAoNascer     Float?
+  escoreVitalidade Int?
+  observacoes      String?
+  createdAt        DateTime @default(now())
+
+  @@index([maeId])
+}
+
+model Pesagem {
+  id          String   @id @default(uuid())
+  animalId    String
+  animal      Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  data        DateTime
+  peso        Float
+  loteId      String?
+  equipamento String?
+  responsavel String?
+  createdAt   DateTime @default(now())
+
+  @@index([animalId])
+  @@index([data])
+}
+
+model Medicamento {
+  id             String   @id @default(uuid())
+  propriedadeId  String
+  propriedade    Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  nome           String
+  principioAtivo String?
+  tipo           String
+  estoque        Float    @default(0)
+  estoqueMinimo  Float?
+  unidade        String   @default("unidade")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vacinacoes     Vacinacao[]
+}
+
+model Vacinacao {
+  id            String     @id @default(uuid())
+  animalId      String
+  animal        Animal     @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  medicamentoId String
+  medicamento   Medicamento @relation(fields: [medicamentoId], references: [id], onDelete: Cascade)
+  data          DateTime
+  loteVacina    String?
+  validade      DateTime?
+  dose          Float?
+  viaAplicacao  String?
+  responsavel   String?
+  animaisTotal  Int?
+  createdAt     DateTime   @default(now())
+
+  @@index([animalId])
+  @@index([data])
+}
+
+model Movimentacao {
+  id             String   @id @default(uuid())
+  animalId       String
+  animal         Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  loteOrigemId   String?
+  loteDestinoId  String?
+  loteDestino    Lote?    @relation(fields: [loteDestinoId], references: [id])
+  data           DateTime
+  motivo         String
+  causa          String?  // preenchido quando motivo = Morte ou Venda
+  observacao     String?
+  createdAt      DateTime @default(now())
+
+  @@index([animalId])
+  @@index([data])
+}
+
+model Receita {
+  id             String   @id @default(uuid())
+  propriedadeId  String
+  propriedade    Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  data           DateTime
+  valor          Float
+  categoria      String   // venda_animais, subprodutos, arrendamento, servicos, outros
+  descricao      String?
+  createdAt      DateTime @default(now())
+
+  @@index([propriedadeId])
+  @@index([data])
+}
+
+model Despesa {
+  id             String   @id @default(uuid())
+  propriedadeId  String
+  propriedade    Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  data           DateTime
+  valor          Float
+  categoria      String   // alimentacao, medicamentos, mao_obra, combustivel, maquinario, benfeitorias, impostos, outros
+  descricao      String?
+  createdAt      DateTime @default(now())
+
+  @@index([propriedadeId])
+  @@index([data])
+}
+
+model BemPatrimonial {
+  id             String   @id @default(uuid())
+  propriedadeId  String
+  propriedade    Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  codigo         String?
+  descricao      String
+  categoria      String   // benfeitoria, maquina, equipamento, implemento
+  tipo           String?
+  marca          String?
+  modelo         String?
+  dataAquisicao  DateTime?
+  valorCompra    Float?
+  responsavel    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([propriedadeId])
+}
+
+model Funcionario {
+  id              String   @id @default(uuid())
+  propriedadeId   String
+  propriedade     Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  nome            String
+  cpf             String?
+  cnh             String?
+  dataNascimento  DateTime?
+  sexo            String?
+  funcoes         String[]  @default([])  // pode ter mais de uma
+  telCelular      String?
+  email           String?
+  cep             String?
+  endereco        String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  uf              String?
+  municipio       String?
+  banco           String?
+  agencia         String?
+  contaBancaria   String?
+  chavePix        String?
+  observacao      String?
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tarefas         Tarefa[]
+  @@index([propriedadeId])
+}
+
+model Tarefa {
+  id             String   @id @default(uuid())
+  propriedadeId  String
+  propriedade    Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  funcionarioId  String?
+  funcionario    Funcionario? @relation(fields: [funcionarioId], references: [id])
+  titulo         String
+  descricao      String?
+  dataPrevista   DateTime
+  concluida      Boolean  @default(false)
+  dataConclusao  DateTime?
+  prioridade     String?  @default("normal")  // baixa, normal, alta, urgente
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([propriedadeId])
+  @@index([funcionarioId])
+  @@index([dataPrevista])
+}
