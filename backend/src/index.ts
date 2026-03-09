@@ -17,6 +17,7 @@ import { lotesRoutes } from './modules/lotes/lotes.routes.js';
 import { pesagemRoutes } from './modules/pesagem/pesagem.routes.js';
 import { reproducaoRoutes } from './modules/reproducao/reproducao.routes.js';
 import { sanidadeRoutes } from './modules/sanidade/sanidade.routes.js';
+import { manejoSanitarioRoutes } from './modules/manejo-sanitario/manejo-sanitario.routes.js';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes.js';
 import { propriedadeRoutes } from './modules/propriedade/propriedade.routes.js';
 import { iaRoutes } from './modules/ia/ia.routes.js';
@@ -29,14 +30,22 @@ import { tarefasRoutes } from './modules/tarefas/tarefas.routes.js';
 import { racasRoutes } from './modules/racas/racas.routes.js';
 import { configRoutes } from './modules/config/config.routes.js';
 import { fornecedoresRoutes } from './modules/fornecedores/fornecedores.routes.js';
+import { uploadRoutes } from './modules/upload/upload.routes.js';
 import fastifyStatic from '@fastify/static';
+import fastifyMultipart from '@fastify/multipart';
 
 const app = Fastify({ logger: true });
 
+app.setErrorHandler((err, _request, reply) => {
+  app.log.error(err);
+  reply.status(err.statusCode ?? 500).send({ error: err.message ?? 'Erro interno do servidor' });
+});
+
 await app.register(cors, { origin: true });
 await app.register(jwt, { secret: config.jwtSecret });
+await app.register(fastifyMultipart, { limits: { fileSize: 20 * 1024 * 1024 } });
 
-app.decorate('authenticate', async function (request: any, reply: any) {
+app.decorate('authenticate', async function (request: import('fastify').FastifyRequest, reply: import('fastify').FastifyReply) {
   try {
     await request.jwtVerify();
   } catch (err) {
@@ -51,6 +60,7 @@ app.register(lotesRoutes, { prefix: '/api/lotes' });
 app.register(pesagemRoutes, { prefix: '/api/pesagens' });
 app.register(reproducaoRoutes, { prefix: '/api/reproducao' });
 app.register(sanidadeRoutes, { prefix: '/api/sanidade' });
+app.register(manejoSanitarioRoutes, { prefix: '/api/manejo-sanitario' });
 app.register(dashboardRoutes, { prefix: '/api/dashboard' });
 app.register(iaRoutes, { prefix: '/api/ia' });
 app.register(financeiroRoutes, { prefix: '/api/financeiro' });
@@ -62,15 +72,26 @@ app.register(tarefasRoutes, { prefix: '/api/tarefas' });
 app.register(racasRoutes, { prefix: '/api/racas' });
 app.register(configRoutes, { prefix: '/api/config' });
 app.register(fornecedoresRoutes, { prefix: '/api/fornecedores' });
+app.register(uploadRoutes, { prefix: '/api/upload' });
 
 app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
+const uploadsDir = path.resolve(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+app.get('/uploads/*', async (request, reply) => {
+  const f = (request.params as { '*': string })['*'] || '';
+  const filePath = path.join(uploadsDir, f);
+  if (!filePath.startsWith(uploadsDir) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    return reply.status(404).send({ error: 'Not found' });
+  }
+  return reply.send(fs.createReadStream(filePath));
+});
 const frontendDist = path.resolve(__dirname, '../../frontend/dist');
 if (fs.existsSync(frontendDist)) {
   await app.register(fastifyStatic, { root: frontendDist });
   app.setNotFoundHandler((req, reply) => {
     if (req.url.startsWith('/api')) return reply.status(404).send({ error: 'Not found' });
-    return reply.sendFile('index.html');
+    return reply.type('text/html').send(fs.readFileSync(path.join(frontendDist, 'index.html')));
   });
   app.log.info({ path: frontendDist }, 'Servindo frontend');
 } else {

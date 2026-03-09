@@ -29,7 +29,7 @@ const nav = [
   { to: '/pesagens', icon: Scale, label: 'Pesagens' },
   { to: '/movimentacoes', icon: Truck, label: 'Movimentações' },
   { to: '/reproducao', icon: Baby, label: 'Reprodução' },
-  { to: '/sanidade', icon: Syringe, label: 'Sanidade' },
+  { to: '/sanidade', icon: Syringe, label: 'Manejo Sanitário' },
   { to: '/financeiro', icon: DollarSign, label: 'Financeiro' },
   { to: '/patrimonio', icon: HardHat, label: 'Patrimônio' },
   { to: '/funcionarios', icon: Users, label: 'Funcionários' },

@@ -96,17 +96,18 @@ model Propriedade {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  animais       Animal[]
-  lotes         Lote[]
-  piquetes      Piquete[]
-  estacoesMonta EstacaoMonta[]
-  medicamentos  Medicamento[]
-  receitas      Receita[]
-  despesas      Despesa[]
+  animais         Animal[]
+  lotes           Lote[]
+  piquetes        Piquete[]
+  estacoesMonta   EstacaoMonta[]
+  medicamentos    Medicamento[]
+  receitas        Receita[]
+  despesas        Despesa[]
   bensPatrimoniais BemPatrimonial[]
-  funcionarios  Funcionario[]
-  tarefas       Tarefa[]
-  fornecedores  Fornecedor[]
+  funcionarios    Funcionario[]
+  tarefas         Tarefa[]
+  fornecedores    Fornecedor[]
+  manejosSanitarios ManejoSanitario[]
 }
 
 model Fornecedor {
@@ -184,6 +185,7 @@ model Animal {
   vacinacoes       Vacinacao[]
   movimentacoes    Movimentacao[]
   diagnosticos     DiagnosticoGestacao[]
+  manejosSanitarios ManejoSanitario[]
 
   @@unique([propriedadeId, brinco])
   @@index([propriedadeId])
@@ -215,6 +217,7 @@ model Lote {
 
   animais          Animal[]
   movimentacoes    Movimentacao[]
+  manejosSanitarios ManejoSanitario[]
 }
 
 model Piquete {
@@ -337,6 +340,34 @@ model Vacinacao {
   animaisTotal  Int?
   createdAt     DateTime   @default(now())
 
+  @@index([animalId])
+  @@index([data])
+}
+
+model ManejoSanitario {
+  id                     String     @id @default(uuid())
+  propriedadeId          String
+  propriedade            Propriedade @relation(fields: [propriedadeId], references: [id], onDelete: Cascade)
+  animalId               String
+  animal                 Animal     @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  loteId                 String?
+  lote                   Lote?      @relation(fields: [loteId], references: [id])
+  data                   DateTime
+  tipoManejo             String     // Vacina, Vermífugo, Carrapaticida/Mosquicida, Antibiótico, Anti-inflamatório, Antisséptico, Cicatrizante, Soro
+  responsavelPrescricao  String?
+  responsavelAplicacao   String?
+  medicamento            String?
+  fotoProduto            String?
+  fotoReceita            String?
+  formaFarmaceutica      String?
+  dosagemPosologia       String?
+  viaAdministracao       String?
+  frequenciaDuracao      String?
+  carencia               String?
+  observacao             String?
+  createdAt              DateTime   @default(now())
+
+  @@index([propriedadeId])
   @@index([animalId])
   @@index([data])
 }

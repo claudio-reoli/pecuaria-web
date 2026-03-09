@@ -5,6 +5,10 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.production
+
+# Dumps e backups temporarios
+scripts/*.sql
 
 # Build outputs
 dist/
@@ -28,3 +32,6 @@ Thumbs.db
 # Prisma
 *.db
 *.db-journal
+
+# Uploads
+uploads/

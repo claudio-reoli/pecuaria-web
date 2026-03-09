@@ -17,28 +17,37 @@ const registerSchema = z.object({
 
 export async function authRoutes(app: FastifyInstance) {
   app.post('/login', async (request, reply) => {
-    const body = loginSchema.parse(request.body);
-    const user = await prisma.user.findUnique({ where: { email: body.email } });
-    if (!user || !user.active) {
-      return reply.status(401).send({ error: 'Credenciais inválidas' });
+    try {
+      const body = loginSchema.parse(request.body);
+      const user = await prisma.user.findUnique({ where: { email: body.email } });
+      if (!user || !user.active) {
+        return reply.status(401).send({ error: 'Credenciais inválidas' });
+      }
+      const valid = await bcrypt.compare(body.password, user.password);
+      if (!valid) {
+        return reply.status(401).send({ error: 'Credenciais inválidas' });
+      }
+      const token = app.jwt.sign(
+        { sub: user.id, email: user.email, role: user.role },
+        { expiresIn: '7d' }
+      );
+      return reply.status(200).send({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro interno';
+      if (msg.includes('email') || msg.includes('Credenciais')) {
+        return reply.status(401).send({ error: 'Credenciais inválidas' });
+      }
+      app.log.error(err);
+      return reply.status(500).send({ error: 'Erro ao processar login. Tente novamente.' });
     }
-    const valid = await bcrypt.compare(body.password, user.password);
-    if (!valid) {
-      return reply.status(401).send({ error: 'Credenciais inválidas' });
-    }
-    const token = app.jwt.sign(
-      { sub: user.id, email: user.email, role: user.role },
-      { expiresIn: '7d' }
-    );
-    return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    };
   });
 
   app.post('/register', async (request, reply) => {

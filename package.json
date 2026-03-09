@@ -1,6 +1,6 @@
 {
   "name": "pecuaria-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "workspaces": ["frontend", "backend"],
   "scripts": {
@@ -13,7 +13,11 @@
     "build": "npm run build -w backend && npm run build -w frontend",
     "start": "npm run start -w backend",
     "db:migrate": "npm run db:migrate -w backend",
-    "db:seed": "npm run db:seed -w backend"
+    "db:seed": "npm run db:seed -w backend",
+    "db:transfer-dev-prod": "powershell -ExecutionPolicy Bypass -File scripts/transferir-dev-para-prod.ps1",
+    "db:transfer-dev-prod:truncate": "powershell -ExecutionPolicy Bypass -File scripts/transferir-dev-para-prod.ps1 -TruncateProd",
+    "db:transfer-dev-prod:backup": "powershell -ExecutionPolicy Bypass -File scripts/transferir-dev-para-prod.ps1 -TruncateProd -BackupProd",
+    "db:export-dump": "powershell -ExecutionPolicy Bypass -File scripts/transferir-dev-prod-via-dump.ps1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

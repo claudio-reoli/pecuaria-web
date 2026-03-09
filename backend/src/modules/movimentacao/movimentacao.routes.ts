@@ -5,12 +5,13 @@ import { prisma } from '../../lib/prisma.js';
 const createSchema = z.object({
   animalId: z.string().uuid(),
   loteOrigemId: z.string().uuid().optional(),
-  loteDestinoId: z.string().uuid(),
+  loteDestinoId: z.string().uuid().optional().nullable(),
   data: z.string(),
   motivo: z.string(),
   causa: z.string().optional(),
   observacao: z.string().optional(),
 });
+const MOTIVOS_SAIDA = ['morte', 'venda', 'abate interno', 'perda', 'roubo'];
 
 export async function movimentacaoRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.authenticate);
@@ -31,11 +32,14 @@ export async function movimentacaoRoutes(app: FastifyInstance) {
 
   app.post('/', async (req) => {
     const body = createSchema.parse(req.body);
+    const loteDestinoId = body.loteDestinoId || null;
     const mov = await prisma.movimentacao.create({
-      data: { ...body, data: new Date(body.data) },
+      data: { ...body, loteDestinoId, data: new Date(body.data) },
       include: { animal: true, loteDestino: true },
     });
-    await prisma.animal.update({ where: { id: body.animalId }, data: { loteId: body.loteDestinoId } });
+    if (!MOTIVOS_SAIDA.includes(body.motivo) && loteDestinoId) {
+      await prisma.animal.update({ where: { id: body.animalId }, data: { loteId: loteDestinoId } });
+    }
     return mov;
   });
 

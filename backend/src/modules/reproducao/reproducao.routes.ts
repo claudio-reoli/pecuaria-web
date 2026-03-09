@@ -133,7 +133,7 @@ export async function reproducaoRoutes(app: FastifyInstance) {
         data: {
           propriedadeId: mae.propriedadeId,
           brinco: body.brincoCria,
-          sexo: body.sexCria as any,
+          sexo: body.sexoCria as 'M' | 'F',
           categoria: 'BEZERRO',
           origem: 'nascimento',
           maeId: body.maeId,
@@ -149,7 +149,7 @@ export async function reproducaoRoutes(app: FastifyInstance) {
         data: new Date(body.data),
         hora: body.hora,
         tipo: body.tipo,
-        sexoCria: body.sexCria as any,
+        sexoCria: body.sexoCria as 'M' | 'F',
         pesoAoNascer: body.pesoAoNascer,
         escoreVitalidade: body.escoreVitalidade,
         observacoes: body.observacoes,

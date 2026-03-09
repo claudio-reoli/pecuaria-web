@@ -26,8 +26,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!t) return;
     try {
       const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${t}` } });
-      if (res.ok) {
-        const u = await res.json();
+      const text = await res.text();
+      const u = text ? JSON.parse(text) : null;
+      if (res.ok && u) {
         setUser(u);
       } else {
         localStorage.removeItem('token');
@@ -41,13 +42,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro ao fazer login');
+    let res: Response;
+    try {
+      res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão e se o backend está rodando.');
+    }
+    const text = await res.text();
+    let data: { token?: string; user?: User; error?: string } = {};
+    try {
+      if (text) data = JSON.parse(text);
+    } catch {
+      const hint = res.status >= 500 ? 'O servidor pode estar instável.' : '';
+      throw new Error(`Resposta inválida do servidor. ${hint} Verifique se o backend está rodando.`.trim());
+    }
+    if (!res.ok) throw new Error(data.error || `Erro ao fazer login (${res.status})`);
+    if (!data.token || !data.user) throw new Error('Resposta inválida do servidor.');
     localStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
